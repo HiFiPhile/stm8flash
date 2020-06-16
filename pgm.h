@@ -1,16 +1,12 @@
 #ifndef __PGM_H
 #define __PGM_H
 
-#if defined(WIN32) || defined(__CYGWIN__)
- #include <libusb-1.0/libusb.h>
-#else
- #include <libusb.h>
-#endif
+#include <libusb.h>
 
 #include "stm8.h"
-#include "libespstlink.h"
 
-typedef enum {
+typedef enum
+{
     UNKNOWN,
     RAM,
     EEPROM,
@@ -18,7 +14,8 @@ typedef enum {
     OPT,
 } memtype_t;
 
-typedef enum {
+typedef enum
+{
     NONE = 0,
     READ,
     WRITE,
@@ -26,38 +23,40 @@ typedef enum {
     UNLOCK
 } action_t;
 
-typedef enum {
-	STLinkV1,
-	STLinkV2,
-	STLinkV21,
-	STLinkV3,
-	ESP_STLink
+typedef enum
+{
+    STLinkV1,
+    STLinkV2,
+    STLinkV21,
+    STLinkV3,
+    ESP_STLink
 } programmer_type_t;
 
-typedef struct programmer_s {
-	/* Info */
-	const char *name;
-	programmer_type_t type;
-	unsigned int usb_vid;
-	unsigned int usb_pid;
+typedef struct programmer_s
+{
+    /* Info */
+    const char *      name;
+    programmer_type_t type;
+    unsigned int      usb_vid;
+    unsigned int      usb_pid;
 
-	/* Methods */
-	bool (*open) (struct programmer_s *pgm);
-	void (*close) (struct programmer_s *pgm);
-	void (*reset) (struct programmer_s *pgm);
-	int (*read_range) (struct programmer_s *pgm, const stm8_device_t *device, unsigned char *buffer, unsigned int start, unsigned int length);
-	int (*write_range) (struct programmer_s *pgm, const stm8_device_t *device, unsigned char *buffer, unsigned int start, unsigned int length, const memtype_t memtype);
+    /* Methods */
+    bool (*open)(struct programmer_s *pgm);
+    void (*close)(struct programmer_s *pgm);
+    void (*reset)(struct programmer_s *pgm);
+    int (*read_range)(struct programmer_s *pgm, const stm8_device_t *device, unsigned char *buffer, unsigned int start,
+                      unsigned int length);
+    int (*write_range)(struct programmer_s *pgm, const stm8_device_t *device, unsigned char *buffer, unsigned int start,
+                       unsigned int length, const memtype_t memtype);
 
-	/* Private */
-	libusb_device_handle *dev_handle;
-	libusb_context *ctx;
+    /* Private */
+    libusb_device_handle *dev_handle;
+    libusb_context *      ctx;
 
-	unsigned int msg_count; // debugging only
-	unsigned int out_msg_size; // stlink/stlinkv2
+    unsigned int msg_count;    // debugging only
+    unsigned int out_msg_size; // stlink/stlinkv2
 
-	/* Data for espstlink module. */
-        espstlink_t * espstlink;
-	const char *port;
+    const char *port;
 } programmer_t;
 
 typedef bool (*pgm_open_cb)(programmer_t *);
