@@ -12,7 +12,6 @@
 #include <unistd.h>
 
 #include "pgm.h"
-#include "espstlink.h"
 #include "stlink.h"
 #include "stlinkv2.h"
 #include "stm8.h"
@@ -81,17 +80,6 @@ programmer_t pgms[] = {
 		stlink2_swim_read_range,
 		stlink2_swim_write_range,
 	},
-	{
-		"espstlink",
-		ESP_STLink,
-		0,
-		0,
-		espstlink_pgm_open,
-		espstlink_pgm_close,
-		espstlink_srst,
-		espstlink_swim_read_range,
-		espstlink_swim_write_range,
-	},
 	{ NULL },
 };
 
@@ -119,7 +107,6 @@ void print_help_and_exit(const char *name, bool err) {
 	}
 	fprintf(stream, ")\n");
 	fprintf(stream, "\t-S serialno    Specify programmer's serial number. If not given and more than one programmer is available, they'll be listed.\n");
-	fprintf(stream, "\t-d port        Specify the serial device for espstlink (default: /dev/ttyUSB0)\n");
 	fprintf(stream, "\t-p partno      Specify STM8 device\n");
 	fprintf(stream, "\t-l             List supported STM8 devices\n");
 	fprintf(stream, "\t-s memtype     Specify memory type (flash, eeprom, ram, opt or explicit address)\n");
@@ -337,7 +324,7 @@ void dump_stlink_programmers(void) {
 			numOfProgrammers++;
 		}
 	}
-	
+
 	libusb_free_device_list(devs, 1);
 }
 
@@ -372,7 +359,6 @@ int main(int argc, char **argv) {
 		part_specified = false,
 		bytes_count_specified = false;
 	memtype_t memtype = FLASH;
-	const char * port = NULL;
 	int i;
 	programmer_t *pgm = NULL;
 	const stm8_device_t *part = NULL;
@@ -380,7 +366,7 @@ int main(int argc, char **argv) {
 	setbuf (stderr, 0); // Make stderr unbuffered (which is the default on POSIX anyway, but not on Windows).
 	setbuf (stdout, 0); // Also make stdout unbuffered (performance doesn't matter much here, bug quick progress display is useful).
 
-	while((c = getopt(argc, argv, "r:w:v:nc:S:p:d:s:b:hluVLR")) != (char)-1) {
+	while((c = getopt(argc, argv, "r:w:v:nc:S:p:s:b:hluVLR")) != (char)-1) {
 		switch(c) {
 			case 'c':
 				pgm_specified = true;
@@ -397,9 +383,6 @@ int main(int argc, char **argv) {
 			case 'p':
 				part_specified = true;
 				part = get_part(optarg);
-				break;
-			case 'd':
-				port = strdup(optarg);
 				break;
 			case 'L':
 				dump_stlink_programmers();
@@ -475,7 +458,6 @@ int main(int argc, char **argv) {
 	}
 	if(!pgm)
 		spawn_error("No programmer has been specified");
-	pgm->port = port;
 	if(part_specified && !part) {
 		fprintf(stderr, "No valid part specified. Use -l to see the list of supported devices.\n");
 		exit(-1);
